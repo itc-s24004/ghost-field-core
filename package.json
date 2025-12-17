@@ -1,0 +1,17 @@
+{
+	"name": "ghost-field-core",
+	"version": "0.0.0",
+	"description": "カードゲーム・ゴーストフィールドのコアライブラリ",
+
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+
+	"type": "module",
+
+	"scripts": {
+		"build": "tsc"
+	},
+	"devDependencies": {
+		"typescript": "^5.9.3"
+	}
+}
