@@ -1,2 +1,1 @@
-export * from "./main.js";
-//# sourceMappingURL=index.js.map
+export * from "./deck.js";

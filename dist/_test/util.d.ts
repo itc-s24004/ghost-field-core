@@ -1,0 +1,15 @@
+import type { GF_Card, GF_CardUseOptions } from "../card/card";
+import type { GF_EX_GameData } from "../game/action";
+import type { GF_Player } from "../player/player";
+export declare function getInput(label?: string): Promise<string>;
+export declare function inputBoolean(label: string): Promise<boolean>;
+export declare function inputNumber(label: string): Promise<number>;
+export declare function inputInt(label: string): Promise<number>;
+export declare function inputSelectIndex(label: string, options: string[]): Promise<number>;
+export declare function selectCardMap(hand: Map<GF_Card, number>, magicStack: Map<GF_Card, number>): Promise<GF_Card<{}>[]>;
+export declare function selectCards(cards: GF_Card[]): Promise<GF_Card<{}>[]>;
+export declare function toCardsString(cards: GF_Card[], showIndex: boolean): string;
+export declare function toCardMapString(cardMap: Map<GF_Card, number>, showIndex?: boolean): string;
+export type EX_TestCall = () => Promise<void>;
+export declare function useCards<EX_Card extends GF_EX_GameData>(player: GF_Player<EX_Card>): Promise<void>;
+export declare function inputSelectOptions(player: GF_Player): Promise<GF_CardUseOptions>;
