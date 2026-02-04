@@ -1,1 +1,1 @@
-export *  from "./main.js";
+export * from "./deck.js";
