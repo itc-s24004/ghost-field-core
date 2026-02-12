@@ -1,6 +1,6 @@
-import { GF_Card } from "../../card/card";
-import { getInput, inputSelectIndex, selectCards, toCardsString } from "../util";
-import { dev_player } from "./player";
+import { GF_Util } from "../../util/index.js";
+import { getInput, inputSelectIndex, selectCards, toCardsString } from "../util.js";
+import { dev_player } from "./player.js";
 export async function dev_ex_mix(player, cards) {
     console.log(cards);
     const selectedCards = [];
@@ -38,7 +38,7 @@ export async function dev_ex_mix(player, cards) {
                 console.log("攻撃として混成を実行します。選択されたカード:");
                 console.log(toCardsString(selectedCards, false));
                 // ここで混成ロジックを呼び出すなどの処理を行う
-                const mixData = GF_Card.useOffensive(player, selectedCards[0], { cards: selectedCards.slice(1) });
+                const mixData = GF_Util.useOffensive(player, selectedCards[0], { cards: selectedCards.slice(1) });
                 console.log("混成結果:");
                 console.log(mixData);
                 console.log("Enterキーを押して続行します。");
@@ -49,7 +49,7 @@ export async function dev_ex_mix(player, cards) {
                 console.log("防御として混成を実行します。選択されたカード:");
                 console.log(toCardsString(selectedCards, false));
                 // ここで混成ロジックを呼び出すなどの処理を行う
-                const mixData = GF_Card.useDefensive(player, selectedCards[0], { cards: selectedCards.slice(1) });
+                const mixData = GF_Util.useDefensive(player, selectedCards[0], { cards: selectedCards.slice(1) });
                 console.log("混成結果:");
                 console.log(mixData);
                 console.log("Enterキーを押して続行します。");

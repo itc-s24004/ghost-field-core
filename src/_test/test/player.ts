@@ -1,5 +1,5 @@
-import { GF_Player } from "../../player/player";
-import { getInput, inputSelectIndex } from "../util";
+import { GF_Player } from "../../player/player.js";
+import { getInput, inputSelectIndex } from "../util.js";
 
 export async function dev_player(player: GF_Player): Promise<void> {
     while (true) {

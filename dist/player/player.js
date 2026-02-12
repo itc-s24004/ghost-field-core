@@ -1,6 +1,6 @@
-import { GF_Element } from "../card/element";
-import { GF_PlayerDeck } from "../deck/deck";
-import { GF_EffectManager } from "./effect";
+import { GF_Element } from "../card/element.js";
+import { GF_PlayerDeck } from "../deck/deck.js";
+import { GF_EffectManager } from "./effect.js";
 export class GF_Player {
     #stats;
     #effects = new GF_EffectManager();

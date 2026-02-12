@@ -1,6 +1,6 @@
-import type { GF_Card_ID } from "./card/component";
-import { GF_Element } from "./card/element";
-import type { GF_Initial_Game } from "./game/game";
+import type { GF_Card_ID } from "./card/component.js";
+import { GF_Element } from "./card/element.js";
+import type { GF_Initial_Game } from "./game/game.js";
 
 export const GameInitData: GF_Initial_Game = {
     cards: [
@@ -8,6 +8,7 @@ export const GameInitData: GF_Initial_Game = {
             id: "gf:exchange" as GF_Card_ID,
             name: "両替券",
             price: 0,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Normal,
             offensive: {
@@ -19,6 +20,7 @@ export const GameInitData: GF_Initial_Game = {
             id: "sell" as GF_Card_ID,
             name: "ブラックチケット",
             price: 0,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Normal,
             offensive: {
@@ -30,6 +32,7 @@ export const GameInitData: GF_Initial_Game = {
             id: "fireball" as GF_Card_ID,
             name: "ファイアボール",
             price: 0,
+            cost: 0,
             isMagic: true,
             element: GF_Element.Fire,
             offensive: {
@@ -44,6 +47,7 @@ export const GameInitData: GF_Initial_Game = {
             id: "gf:sword" as GF_Card_ID,
             name: "剣",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Normal,
             offensive: {
@@ -58,6 +62,7 @@ export const GameInitData: GF_Initial_Game = {
             id: "gf:combat_knife" as GF_Card_ID,
             name: "コンバットナイフ",
             price: 8,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Normal,
             offensive: {
@@ -72,6 +77,7 @@ export const GameInitData: GF_Initial_Game = {
             id: "gf:shield" as GF_Card_ID,
             name: "盾",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Normal,
             defensive: {
@@ -85,6 +91,7 @@ export const GameInitData: GF_Initial_Game = {
             id: "gf:small_shield" as GF_Card_ID,
             name: "小さな盾",
             price: 3,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Normal,
             defensive: {
@@ -112,6 +119,7 @@ export const GameInitData: GF_Initial_Game = {
             id: "gf:normal" as GF_Card_ID,
             name: "無属性",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Normal,
             offensive: {
@@ -122,11 +130,11 @@ export const GameInitData: GF_Initial_Game = {
             },
             weight: 5
         },
-        
         {
             id: "gf:fire" as GF_Card_ID,
             name: "火",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Fire,
             offensive: {
@@ -141,6 +149,7 @@ export const GameInitData: GF_Initial_Game = {
             id: "gf:water" as GF_Card_ID,
             name: "水",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Water,
             offensive: {
@@ -155,6 +164,7 @@ export const GameInitData: GF_Initial_Game = {
             id: "gf:wind" as GF_Card_ID,
             name: "風",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Wind,
             offensive: {
@@ -169,6 +179,7 @@ export const GameInitData: GF_Initial_Game = {
             id: "gf:stone" as GF_Card_ID,
             name: "石",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Stone,
             offensive: {
@@ -183,6 +194,7 @@ export const GameInitData: GF_Initial_Game = {
             id: "gf:dark" as GF_Card_ID,
             name: "闇",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Dark,
             offensive: {
@@ -197,6 +209,7 @@ export const GameInitData: GF_Initial_Game = {
             id: "gf:light" as GF_Card_ID,
             name: "光",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Light,
             offensive: {
@@ -211,6 +224,7 @@ export const GameInitData: GF_Initial_Game = {
             id: "gf:lightning" as GF_Card_ID,
             name: "雷",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Lightning,
             offensive: {
@@ -225,6 +239,7 @@ export const GameInitData: GF_Initial_Game = {
             id: "gf:wood" as GF_Card_ID,
             name: "木",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Wood,
             offensive: {
@@ -234,7 +249,8 @@ export const GameInitData: GF_Initial_Game = {
                 value: 4
             },
             weight: 5
-        },
+        }
             
-    ]
+    ],
+    meta: {}
 }

@@ -1,4 +1,4 @@
-import { getInput, inputSelectIndex } from "../util";
+import { getInput, inputSelectIndex } from "../util.js";
 export async function dev_player(player) {
     while (true) {
         console.log("現在のステータス:");

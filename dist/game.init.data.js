@@ -1,10 +1,11 @@
-import { GF_Element } from "./card/element";
+import { GF_Element } from "./card/element.js";
 export const GameInitData = {
     cards: [
         {
             id: "gf:exchange",
             name: "両替券",
             price: 0,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Normal,
             offensive: {
@@ -16,6 +17,7 @@ export const GameInitData = {
             id: "sell",
             name: "ブラックチケット",
             price: 0,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Normal,
             offensive: {
@@ -27,6 +29,7 @@ export const GameInitData = {
             id: "fireball",
             name: "ファイアボール",
             price: 0,
+            cost: 0,
             isMagic: true,
             element: GF_Element.Fire,
             offensive: {
@@ -41,6 +44,7 @@ export const GameInitData = {
             id: "gf:sword",
             name: "剣",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Normal,
             offensive: {
@@ -55,6 +59,7 @@ export const GameInitData = {
             id: "gf:combat_knife",
             name: "コンバットナイフ",
             price: 8,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Normal,
             offensive: {
@@ -69,6 +74,7 @@ export const GameInitData = {
             id: "gf:shield",
             name: "盾",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Normal,
             defensive: {
@@ -82,6 +88,7 @@ export const GameInitData = {
             id: "gf:small_shield",
             name: "小さな盾",
             price: 3,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Normal,
             defensive: {
@@ -109,6 +116,7 @@ export const GameInitData = {
             id: "gf:normal",
             name: "無属性",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Normal,
             offensive: {
@@ -123,6 +131,7 @@ export const GameInitData = {
             id: "gf:fire",
             name: "火",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Fire,
             offensive: {
@@ -137,6 +146,7 @@ export const GameInitData = {
             id: "gf:water",
             name: "水",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Water,
             offensive: {
@@ -151,6 +161,7 @@ export const GameInitData = {
             id: "gf:wind",
             name: "風",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Wind,
             offensive: {
@@ -165,6 +176,7 @@ export const GameInitData = {
             id: "gf:stone",
             name: "石",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Stone,
             offensive: {
@@ -179,6 +191,7 @@ export const GameInitData = {
             id: "gf:dark",
             name: "闇",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Dark,
             offensive: {
@@ -193,6 +206,7 @@ export const GameInitData = {
             id: "gf:light",
             name: "光",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Light,
             offensive: {
@@ -207,6 +221,7 @@ export const GameInitData = {
             id: "gf:lightning",
             name: "雷",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Lightning,
             offensive: {
@@ -221,6 +236,7 @@ export const GameInitData = {
             id: "gf:wood",
             name: "木",
             price: 5,
+            cost: 0,
             isMagic: false,
             element: GF_Element.Wood,
             offensive: {
@@ -230,6 +246,7 @@ export const GameInitData = {
                 value: 4
             },
             weight: 5
-        },
-    ]
+        }
+    ],
+    meta: {}
 };

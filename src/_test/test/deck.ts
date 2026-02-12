@@ -1,7 +1,7 @@
-import type { GF_Card } from "../../card/card";
-import { GF_Deck } from "../../deck/deck";
-import { GameInitData } from "../../game.init.data";
-import { getInput, inputInt } from "../util";
+import type { GF_Card } from "../../card/card.js";
+import { GF_Deck } from "../../deck/deck.js";
+import { GameInitData } from "../../game.init.data.js";
+import { getInput, inputInt } from "../util.js";
 
 
 

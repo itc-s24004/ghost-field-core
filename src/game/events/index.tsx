@@ -1,9 +1,10 @@
-import type { GF_Card, GF_CardMixData_Exchange, GF_CardMixData_Heal } from "../../card/card";
-import type { GF_UseCardResult } from "../../deck/deck";
-import type { GF_Player } from "../../player/player";
-import type { GF_EX_GameData, GF_SystemAction, GF_SystemAction_Offensive } from "../action";
+import type { GF_Card } from "../../card/card.js";
+import type { GF_UseCardResult } from "../../deck/deck.js";
+import type { GF_Player } from "../../player/player.js";
+import { GF_CardMixData_Exchange, GF_CardMixData_Heal } from "../../util/card/index.js";
+import type { GF_EX_GameData, GF_SystemAction, GF_SystemAction_Offensive } from "../action.js";
 
-export type GF_SystemEventMap<EX_Card extends GF_EX_GameData = {}> = {
+export type GF_SystemEventDataMap<EX_Card extends GF_EX_GameData = {}> = {
     /**カードを引いた時 */
     onDrawCard: {
         player: GF_Player<EX_Card>;
@@ -85,6 +86,6 @@ export type GF_SystemEventMap<EX_Card extends GF_EX_GameData = {}> = {
     }
 }
 
-export type GF_SystemEventCallbackMap<EX_Card extends GF_EX_GameData = {}> = {
-    [K in keyof GF_SystemEventMap<EX_Card>]?: (ev: GF_SystemEventMap<EX_Card>[K]) => void;
+export type GF_GameEventMap<EX_Card extends GF_EX_GameData = {}> = {
+    [K in keyof GF_SystemEventDataMap<EX_Card>]?: (ev: GF_SystemEventDataMap<EX_Card>[K]) => void;
 }

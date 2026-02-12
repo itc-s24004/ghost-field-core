@@ -1,7 +1,8 @@
-import { GF_Card } from "../../card/card";
-import type { GF_Player } from "../../player/player";
-import { getInput, inputSelectIndex, selectCards, toCardsString } from "../util";
-import { dev_player } from "./player";
+import { GF_Card } from "../../card/card.js";
+import type { GF_Player } from "../../player/player.js";
+import { GF_Util } from "../../util/index.js";
+import { getInput, inputSelectIndex, selectCards, toCardsString } from "../util.js";
+import { dev_player } from "./player.js";
 
 export async function dev_Player_deck(player: GF_Player) {
     while (true) {
@@ -50,14 +51,14 @@ export async function dev_Player_deck(player: GF_Player) {
             ]);
             if (useType === 0) {
                 console.log("攻撃カードとして使用します。");
-                const mixData = GF_Card.useOffensive(player, baseCard, { cards: multiCards });
+                const mixData = GF_Util.useOffensive(player, baseCard, { cards: multiCards });
                 const result = player.deck.useCard(mixData)
                 console.log("使用結果:");
                 console.log(result);
 
             } else {
                 console.log("防御カードとして使用します。");
-                const mixData = GF_Card.useDefensive(player, baseCard, { cards: multiCards });
+                const mixData = GF_Util.useDefensive(player, baseCard, { cards: multiCards });
                 const result = player.deck.useCard(mixData)
                 console.log("使用結果:");
                 console.log(result);

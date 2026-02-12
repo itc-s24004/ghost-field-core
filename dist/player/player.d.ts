@@ -1,7 +1,7 @@
-import { GF_Element } from "../card/element";
-import { GF_PlayerDeck, type GF_Deck } from "../deck/deck";
-import type { GF_EX_GameData } from "../game/action";
-import { GF_EffectManager } from "./effect";
+import { GF_Element } from "../card/element.js";
+import { GF_PlayerDeck, type GF_Deck } from "../deck/deck.js";
+import type { GF_EX_GameData } from "../game/action.js";
+import { GF_EffectManager } from "./effect.js";
 export type GF_GameValue = number | GF_PlayerStatusType;
 export type GF_PlayerStatusType = "hp" | "mp" | "gold";
 export type GF_PlayerStatus = {

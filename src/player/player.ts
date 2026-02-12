@@ -1,7 +1,7 @@
-import { GF_Element } from "../card/element";
-import { GF_PlayerDeck, type GF_Deck } from "../deck/deck";
-import type { GF_EX_GameData } from "../game/action";
-import { GF_EffectManager } from "./effect";
+import { GF_Element } from "../card/element.js";
+import { GF_PlayerDeck, type GF_Deck } from "../deck/deck.js";
+import type { GF_EX_GameData } from "../game/action.js";
+import { GF_EffectManager } from "./effect.js";
 
 
 

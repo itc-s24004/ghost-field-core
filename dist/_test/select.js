@@ -1,11 +1,11 @@
-import { GF_Deck } from "../deck/deck";
-import { GameInitData } from "../game.init.data";
-import { GF_Player } from "../player/player";
-import { dev_deck } from "./test/deck";
-import { dev_game } from "./test/game";
-import { dev_ex_mix } from "./test/mix";
-import { dev_Player_deck } from "./test/player_deck";
-import { inputSelectIndex } from "./util";
+import { GF_Deck } from "../deck/deck.js";
+import { GameInitData } from "../game.init.data.js";
+import { GF_Player } from "../player/player.js";
+import { dev_deck } from "./test/deck.js";
+import { dev_game } from "./test/game.js";
+import { dev_ex_mix } from "./test/mix.js";
+import { dev_Player_deck } from "./test/player_deck.js";
+import { inputSelectIndex } from "./util.js";
 (async () => {
     while (true) {
         console.log("=== メニュー ===");

@@ -151,7 +151,7 @@ export class GF_PlayerDeck {
      */
     drawCard() {
         const card = this.#deck.drawCard();
-        const removedCard = this.addCard(card);
+        const removedCard = this.#addCard(card);
         return {
             drawnCard: card,
             removedCard
@@ -213,10 +213,7 @@ export class GF_PlayerDeck {
             }
         });
     }
-    addCards(...cards) {
-        return cards.map(card => this.addCard(card)).filter((card) => card !== undefined);
-    }
-    addCard(card) {
+    #addCard(card) {
         const count = this.getCardCount(card);
         this.setCard(card, count + 1);
         if (this.totalHandCount > this.#maxHandSize) {

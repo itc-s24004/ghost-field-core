@@ -1,7 +1,7 @@
-import type { GF_EX_GameData } from "../game/action";
-import type { GF_EffectType } from "../player/effect";
-import type { GF_GameValue, GF_PlayerStatusType } from "../player/player";
-import type { GF_Element } from "./element";
+import type { GF_EX_GameData } from "../game/action.js";
+import type { GF_EffectType } from "../player/effect.js";
+import type { GF_GameValue, GF_PlayerStatusType } from "../player/player.js";
+import type { GF_Element } from "./element.js";
 export type GF_Component = {
     type: string;
 };
@@ -63,7 +63,7 @@ export type GF_CardComponent<E extends GF_EX_GameData = {}> = {
     /**魔法カード */
     isMagic: boolean;
     /**消費コスト */
-    cost?: GF_GameValue;
+    cost: GF_GameValue;
     /**攻撃コンポーネント */
     offensive?: GF_OffensiveComponent;
     /**防御コンポーネント */

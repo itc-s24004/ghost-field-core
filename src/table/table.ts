@@ -1,4 +1,4 @@
-import { GF_Error_Undefined } from "../game/error";
+import { GF_Error_Undefined } from "../game/error.js";
 
 export function generateTable<value, tableData extends Map<value, number> = Map<value, number>>(tableData: tableData): () => value {
     let total = 0;

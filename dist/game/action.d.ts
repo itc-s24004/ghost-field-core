@@ -1,5 +1,5 @@
-import type { GF_CardMixData_Attack } from "../card/card";
-import { GF_Player } from "../player/player";
+import { GF_Player } from "../player/player.js";
+import { GF_CardMixData_Attack } from "../util/card/index.js";
 export type GF_EX_GameData = Record<string, unknown>;
 export type GF_SystemAction_Offensive<EX_Card extends GF_EX_GameData = {}> = {
     src: GF_Player<EX_Card>;

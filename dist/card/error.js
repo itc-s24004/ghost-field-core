@@ -1,4 +1,4 @@
-import { GF_Error } from "../game/error";
+import { GF_Error } from "../game/error.js";
 export class GF_CardError extends GF_Error {
 }
 export class GF_CardError_NoComponent extends GF_CardError {

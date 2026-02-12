@@ -1,6 +1,6 @@
-import { GameInitData } from "../../game.init.data";
-import { GF_Game } from "../../game/game";
-import { getInput, inputInt, inputSelectIndex, inputSelectOptions, selectCardMap, selectCards } from "../util";
+import { GameInitData } from "../../game.init.data.js";
+import { GF_Game } from "../../game/game.js";
+import { getInput, inputInt, inputSelectIndex, inputSelectOptions, selectCardMap, selectCards } from "../util.js";
 
 export async function dev_game() {
     const game = new GF_Game(GameInitData, {

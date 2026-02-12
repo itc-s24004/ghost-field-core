@@ -1,7 +1,8 @@
-import { GF_Card, type GF_CardMixData_All } from "../card/card.js";
+import { GF_Card } from "../card/card.js";
 import type { GF_Card_ID, GF_CardComponent } from "../card/component.js";
 import type { GF_EX_GameData } from "../game/action.js";
 import type { GF_Player } from "../player/player.js";
+import { GF_CardMixData_All } from "../util/card/index.js";
 export declare class GF_Deck<EX_Card extends GF_EX_GameData = {}> {
     #private;
     constructor(initialData: GF_CardComponent<EX_Card>[]);
@@ -68,22 +69,11 @@ export declare class GF_PlayerDeck<EX_Card extends GF_EX_GameData = {}> {
      */
     useCard(data: GF_CardMixData_All<EX_Card>): GF_UseCardResult<EX_Card>;
     addMagicStack(...cards: GF_Card<EX_Card>[]): void;
-    addCards(...cards: GF_Card<EX_Card>[]): GF_Card<EX_Card>[];
-    addCard(card: GF_Card<EX_Card>): GF_Card<EX_Card> | undefined;
     getRandomHandCard(useWeight?: boolean): GF_Card<EX_Card>;
 }
 export type GF_PlayerHand<EX_Card extends GF_EX_GameData = {}> = {
     hand: Map<GF_Card<EX_Card>, number>;
     magicStack: Map<GF_Card<EX_Card>, number>;
-};
-export type GF_UsePlayerCardResult<EX_Card extends GF_EX_GameData> = {
-    /**hpの変化量 */
-    d_hp: number;
-    /**mpの変化量 */
-    d_mp: number;
-    /**goldの変化量 */
-    d_gold: number;
-    removedCards: GF_Card<EX_Card>[];
 };
 export type GF_PlayerDrawResult<EX_Card extends GF_EX_GameData> = {
     drawnCard: GF_Card<EX_Card>;

@@ -1,10 +1,11 @@
-import { GF_Card, type GF_CardMixData, type GF_CardMixData_All, type GF_CardMixData_Attack } from "../card/card.js";
+import { GF_Card } from "../card/card.js";
 import type { GF_Card_ID, GF_CardComponent } from "../card/component.js";
 import { GF_Element } from "../card/element.js";
 import type { GF_EX_GameData } from "../game/action.js";
 import { GF_Error_Undefined } from "../game/error.js";
-import type { GF_Player, GF_PlayerStatus } from "../player/player.js";
+import type { GF_Player } from "../player/player.js";
 import { generateTable } from "../table/table.js";
+import { GF_CardMixData_All } from "../util/card/index.js";
 
 
 type DrawCallback<EX_Card extends GF_EX_GameData> = () => GF_Card<EX_Card>;
@@ -74,23 +75,6 @@ export class GF_Deck<EX_Card extends GF_EX_GameData = {}> {
         return this.#draw();
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -245,7 +229,7 @@ export class GF_PlayerDeck<EX_Card extends GF_EX_GameData = {}> {
      */
     drawCard(): GF_PlayerDrawResult<EX_Card> {
         const card = this.#deck.drawCard();
-        const removedCard = this.addCard(card);
+        const removedCard = this.#addCard(card);
         return {
             drawnCard: card,
             removedCard
@@ -319,12 +303,8 @@ export class GF_PlayerDeck<EX_Card extends GF_EX_GameData = {}> {
         });
     }
 
-    addCards(...cards: GF_Card<EX_Card>[]): GF_Card<EX_Card>[] {
-        return cards.map(card => this.addCard(card)).filter((card) => card !== undefined);
-    }
-
     
-    addCard(card: GF_Card<EX_Card>): GF_Card<EX_Card> | undefined {
+    #addCard(card: GF_Card<EX_Card>): GF_Card<EX_Card> | undefined {
         const count = this.getCardCount(card);
         this.setCard(card, count + 1);
         if (this.totalHandCount > this.#maxHandSize) {
@@ -358,16 +338,6 @@ export type GF_PlayerHand<EX_Card extends GF_EX_GameData = {}> = {
 }
 
 
-export type GF_UsePlayerCardResult<EX_Card extends GF_EX_GameData> = {
-    /**hpの変化量 */
-    d_hp: number;
-    /**mpの変化量 */
-    d_mp: number;
-    /**goldの変化量 */
-    d_gold: number;
-
-    removedCards: GF_Card<EX_Card>[];
-}
 
 
 export type GF_PlayerDrawResult<EX_Card extends GF_EX_GameData> = {

@@ -1,6 +1,6 @@
-import { GF_Deck } from "../../deck/deck";
-import { GameInitData } from "../../game.init.data";
-import { getInput, inputInt } from "../util";
+import { GF_Deck } from "../../deck/deck.js";
+import { GameInitData } from "../../game.init.data.js";
+import { getInput, inputInt } from "../util.js";
 export async function dev_deck() {
     const deck = new GF_Deck(GameInitData.cards);
     const cards = [];

@@ -1,17 +1,20 @@
-import { GF_Card } from "../card/card";
-import { GF_Element } from "../card/element";
-import { GF_Deck } from "../deck/deck";
-import { GF_Player } from "../player/player";
-import { GF_Error_Undefined } from "./error";
+import { GF_Card } from "../card/card.js";
+import { GF_Element } from "../card/element.js";
+import { GF_Deck } from "../deck/deck.js";
+import { GF_Player } from "../player/player.js";
+import { GF_Util } from "../util/index.js";
+import { GF_Error_Undefined } from "./error.js";
 export class GF_Game {
     #systemActionQueue = [];
     /**現在の攻撃アクション */
-    #currentAction = null;
+    #currentAction = undefined;
     /**
      * 現在の攻撃アクションを取得します。\
-     * 入力するプレイヤーが攻撃フェーズの場合は null になります。
+     * 入力するプレイヤーが攻撃フェーズの場合は undefined になります。
      */
     get currentAction() {
+        if (!this.#currentAction)
+            this.#currentAction = this.#systemActionQueue.shift();
         return this.#currentAction;
     }
     #players = [];
@@ -52,21 +55,22 @@ export class GF_Game {
         return this.#winner;
     }
     #deck;
+    #meta = undefined;
     #events;
     constructor(initialData, options = {}) {
         const { secureMode = false, events = {} } = options;
         this.#events = events;
         this.#deck = new GF_Deck(initialData.cards);
+        this.#meta = initialData.meta;
     }
     reset(playerCount) {
         this.#players = new Array(playerCount).fill(null).map(() => new GF_Player(this.#deck));
         for (let i = 0; i < 10; i++) {
             this.#players.forEach(player => {
-                const { drawnCard, removedCard } = player.deck.drawCard();
+                const result = player.deck.drawCard();
                 this.#events.onDrawCard?.({
                     player,
-                    drawnCard,
-                    removedCard
+                    ...result
                 });
             });
         }
@@ -96,19 +100,37 @@ export class GF_Game {
             this.#currentPlayer = this.#nextPlayer;
         }
         //プレイヤーが死亡
-        if (!player.isAlive)
+        if (!player.isAlive) {
             this.#events.onDeath?.({ player });
+        }
+        else {
+            for (let i = 0; i < cards.length; i++) {
+                const result = player.deck.drawCard();
+                this.#events.onDrawCard?.({
+                    player,
+                    ...result
+                });
+            }
+        }
         this.#nextTick();
+    }
+    addAction(action, push = false) {
+        GF_Util.deepFreeze(action);
+        if (push) {
+            this.#systemActionQueue.push(action);
+        }
+        else {
+            this.#systemActionQueue.unshift(action);
+        }
     }
     #offensiveAction(player, target, baseCard, multiCards, options = {}) {
         //カード未指定かつ使用可能なカードが無い場合はドローのみ行う
         if (!baseCard) {
             if (!player.deck.hasCanUseCard()) {
-                const { drawnCard, removedCard } = player.deck.drawCard();
+                const result = player.deck.drawCard();
                 this.#events.onDrawCard?.({
                     player,
-                    drawnCard,
-                    removedCard
+                    ...result
                 });
                 return;
             }
@@ -116,7 +138,7 @@ export class GF_Game {
                 throw new GF_Error_Undefined("使用可能なカードが存在する場合、カードを指定する必要があります。");
             }
         }
-        const data = GF_Card.useOffensive(player, baseCard, {
+        const data = GF_Util.useOffensive(player, baseCard, {
             cards: multiCards,
             ...options
         });
@@ -135,7 +157,7 @@ export class GF_Game {
                         target: tgt,
                         isMiss
                     };
-                    this.#systemActionQueue.unshift(action);
+                    this.addAction(action);
                 });
             }
             else {
@@ -145,7 +167,7 @@ export class GF_Game {
                     target,
                     isMiss: false
                 };
-                this.#systemActionQueue.unshift(action);
+                this.addAction(action);
             }
         }
         else if (type === "exchange") {
@@ -175,7 +197,7 @@ export class GF_Game {
         if (!this.currentAction)
             return;
         //カードの合成
-        const data = GF_Card.useDefensive(player, base, {
+        const data = GF_Util.useDefensive(player, base, {
             cards: multiCards,
             ...options
         });
@@ -217,7 +239,7 @@ export class GF_Game {
                 this.#ghostAction(player, this.currentAction.src);
         }
         //防御フェーズ終了
-        this.#currentAction = null;
+        this.#currentAction = undefined;
     }
     /**
      * ゴーストが祓われるかの抽選を行います
@@ -251,19 +273,18 @@ export class GF_Game {
      */
     #nextTick() {
         while (this.#systemActionQueue.length > 0) {
-            const action = this.#systemActionQueue.shift();
-            if (!action)
-                return;
+            if (!this.currentAction)
+                break;
             //攻撃イベント発火
-            this.#events.onAttack?.({ action });
-            if (action.isMiss) {
+            this.#events.onAttack?.({ action: this.currentAction });
+            if (this.currentAction.isMiss) {
                 continue;
             }
-            else if (action.src === action.target) {
+            else if (this.currentAction.src === this.currentAction.target) {
                 this.#events.onDamage?.({
-                    player: action.target,
-                    damageSource: action.src,
-                    damage: action.value,
+                    player: this.currentAction.target,
+                    damageSource: this.currentAction.src,
+                    damage: this.currentAction.value,
                     nextAction: {
                         ghost: false,
                         trap: false
@@ -271,15 +292,22 @@ export class GF_Game {
                 });
                 continue;
             }
-            this.#currentAction = action;
         }
         //ゲーム終了判定
         const alivePlayers = this.#players.filter(p => p.isAlive);
         const gameEnd = alivePlayers.length <= 1;
         if (gameEnd) {
             this.#winner = alivePlayers[0];
+            this.#systemActionQueue = [];
+            this.#currentAction = undefined;
             this.#events.onGameEnd?.({ winner: this.#winner });
             return;
         }
+    }
+    get info() {
+        return {
+            cards: this.#deck.allCards.map(c => c.component),
+            meta: this.#meta
+        };
     }
 }

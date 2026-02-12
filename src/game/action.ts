@@ -1,7 +1,7 @@
-import type { GF_CardMixData_Attack, GF_CardMixData_Offensive } from "../card/card";
-import type { GF_Card_ID } from "../card/component";
-import type { GF_Element } from "../card/element";
-import { GF_Player } from "../player/player"
+import type { GF_Card_ID } from "../card/component.js";
+import type { GF_Element } from "../card/element.js";
+import { GF_Player } from "../player/player.js";
+import { GF_CardMixData_Attack } from "../util/card/index.js";
 
 // export type GF_SystemAction = {
 //     type: string;

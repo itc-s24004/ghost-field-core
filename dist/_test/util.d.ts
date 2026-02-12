@@ -1,6 +1,7 @@
-import type { GF_Card, GF_CardUseOptions } from "../card/card";
-import type { GF_EX_GameData } from "../game/action";
-import type { GF_Player } from "../player/player";
+import type { GF_Card } from "../card/card.js";
+import type { GF_EX_GameData } from "../game/action.js";
+import type { GF_Player } from "../player/player.js";
+import { GF_CardUseOptions } from "../util/card/index.js";
 export declare function getInput(label?: string): Promise<string>;
 export declare function inputBoolean(label: string): Promise<boolean>;
 export declare function inputNumber(label: string): Promise<number>;
