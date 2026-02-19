@@ -1,5 +1,5 @@
 import { GF_Element } from "../card/element.js";
-import { useDefensive, useOffensive } from "./card/index.js";
+import { cardArray_to_cardIDMap, cardArray_to_cardMap, useDefensive, useOffensive } from "./card/index.js";
 import { getElementWeakness, mixElement } from "./element/index.js";
 
 export class GF_Util {
@@ -30,4 +30,13 @@ export class GF_Util {
     static useOffensive = useOffensive;
     /**複数のカードを合成して防御データを生成します */
     static useDefensive = useDefensive;
+
+
+    /**カードの配列をカードIDと枚数のマップに変換します */
+    static cardArray_to_cardIDMap = cardArray_to_cardIDMap;
+    /**カードの配列をカードと枚数のマップに変換します */
+    static cardArray_to_cardMap = cardArray_to_cardMap;
 }
+
+
+export type * from "./card/index.js";

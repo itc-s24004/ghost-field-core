@@ -1,4 +1,5 @@
 import { GF_Card } from "../../card/card.js";
+import { GF_Card_ID } from "../../card/component.js";
 import { GF_Element } from "../../card/element.js";
 import { GF_CardError_ComponentConflict, GF_CardError_MultiUseRequired } from "../../card/error.js";
 import { GF_EX_GameData } from "../../game/action.js";
@@ -192,6 +193,34 @@ export function useDefensive<EX_Card extends GF_EX_GameData = {}>(src: GF_Player
 
 
 }
+
+
+
+
+
+
+export function cardArray_to_cardMap<EX_Card extends GF_EX_GameData>(cards: GF_Card<EX_Card>[]): Map<GF_Card<EX_Card>, number> {
+    return cards.reduce((map, card) => {
+        const count = map.get(card) ?? 0;
+        map.set(card, count + 1);
+        return map;
+    }, new Map<GF_Card<EX_Card>, number>());
+}
+
+export function cardArray_to_cardIDMap<EX_Card extends GF_EX_GameData>(cards: (GF_Card<EX_Card> | GF_Card_ID)[]): Map<GF_Card_ID, number> {
+    return cards.reduce((map, card) => {
+        const cardID = typeof card === "string" ? card : card.id;
+        const count = map.get(cardID) ?? 0;
+        map.set(cardID, count + 1);
+        return map;
+    }, new Map<GF_Card_ID, number>());
+}
+
+
+
+
+
+
 
 
 
