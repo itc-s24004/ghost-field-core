@@ -1,7 +1,7 @@
 import type { GF_Card } from "../../card/card.js";
 import type { GF_UseCardResult } from "../../deck/deck.js";
 import type { GF_Player } from "../../player/player.js";
-import { GF_CardMixData_Exchange, GF_CardMixData_Heal } from "../../util/card/index.js";
+import type { GF_CardMixData_Exchange, GF_CardMixData_Heal } from "../../util/card/index.js";
 import type { GF_EX_GameData, GF_SystemAction, GF_SystemAction_Offensive } from "../action.js";
 export type GF_SystemEventDataMap<EX_Card extends GF_EX_GameData = {}> = {
     /**カードを引いた時 */
@@ -22,6 +22,11 @@ export type GF_SystemEventDataMap<EX_Card extends GF_EX_GameData = {}> = {
         player: GF_Player<EX_Card>;
         cards: GF_Card<EX_Card>[];
         result: GF_UseCardResult<EX_Card>;
+    };
+    /**魔法カードが追加されたとき */
+    onAddMagicCard: {
+        player: GF_Player<EX_Card>;
+        card: GF_Card<EX_Card>;
     };
     /**攻撃を行った時 */
     onAttack: {
@@ -81,6 +86,9 @@ export type GF_SystemEventDataMap<EX_Card extends GF_EX_GameData = {}> = {
     /**ゲーム終了時 */
     onGameEnd: {
         winner: GF_Player<EX_Card> | undefined;
+    };
+    onNextTurn: {
+        player: GF_Player<EX_Card>;
     };
 };
 export type GF_GameEventMap<EX_Card extends GF_EX_GameData = {}> = {

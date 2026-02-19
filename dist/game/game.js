@@ -1,10 +1,11 @@
 import { GF_Card } from "../card/card.js";
 import { GF_Element } from "../card/element.js";
 import { GF_Deck } from "../deck/deck.js";
+import { CategoryEventEmitter } from "../emitter/emitter.js";
 import { GF_Player } from "../player/player.js";
 import { GF_Util } from "../util/index.js";
 import { GF_Error_Undefined } from "./error.js";
-export class GF_Game {
+export class GF_Game extends CategoryEventEmitter {
     #systemActionQueue = [];
     /**現在の攻撃アクション */
     #currentAction = undefined;
@@ -18,6 +19,9 @@ export class GF_Game {
         return this.#currentAction;
     }
     #players = [];
+    get allPlayers() {
+        return this.#isPlaying ? this.#players : [];
+    }
     /**現在攻撃中のプレイヤー */
     #currentPlayer = undefined;
     get currentPlayer() {
@@ -50,37 +54,49 @@ export class GF_Game {
     getPlayerIndex(player) {
         return this.#players.indexOf(player);
     }
+    #isPlaying = false;
+    get isPlaying() {
+        return this.#isPlaying;
+    }
     #winner = undefined;
     get winner() {
         return this.#winner;
     }
     #deck;
     #meta = undefined;
-    #events;
+    get initData() {
+        return {
+            cards: this.#deck.allCards.map(c => c.component),
+            meta: this.#meta
+        };
+    }
     constructor(initialData, options = {}) {
+        super();
         const { secureMode = false, events = {} } = options;
-        this.#events = events;
         this.#deck = new GF_Deck(initialData.cards);
         this.#meta = initialData.meta;
     }
     reset(playerCount) {
         this.#players = new Array(playerCount).fill(null).map(() => new GF_Player(this.#deck));
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 5; i++) {
             this.#players.forEach(player => {
-                const result = player.deck.drawCard();
-                this.#events.onDrawCard?.({
+                const { drawnCard, removedCard } = player.deck.drawCard();
+                this.emit("onDrawCard", {
                     player,
-                    ...result
+                    drawnCard,
+                    removedCard
                 });
             });
         }
+        this.#winner = undefined;
         this.#currentPlayer = this.#players[0];
+        this.#isPlaying = true;
     }
     getPlayerByIndex(index) {
         return this.#players[index];
     }
     next(useCards, targetIndex, options) {
-        if (this.winner)
+        if (!this.isPlaying)
             throw new GF_Error_Undefined("ゲームが終了しています。");
         const target = this.#players[targetIndex];
         if (!target)
@@ -100,13 +116,10 @@ export class GF_Game {
             this.#currentPlayer = this.#nextPlayer;
         }
         //プレイヤーが死亡
-        if (!player.isAlive) {
-            this.#events.onDeath?.({ player });
-        }
-        else {
+        if (player.isAlive) {
             for (let i = 0; i < cards.length; i++) {
                 const result = player.deck.drawCard();
-                this.#events.onDrawCard?.({
+                super.emit("onDrawCard", {
                     player,
                     ...result
                 });
@@ -128,7 +141,7 @@ export class GF_Game {
         if (!baseCard) {
             if (!player.deck.hasCanUseCard()) {
                 const result = player.deck.drawCard();
-                this.#events.onDrawCard?.({
+                super.emit("onDrawCard", {
                     player,
                     ...result
                 });
@@ -143,7 +156,7 @@ export class GF_Game {
             ...options
         });
         const result = player.deck.useCard(data);
-        this.#events.onUseCard?.({ type: "offensive", player, target, cards: [baseCard, ...multiCards], result });
+        super.emit("onUseCard", { type: "offensive", player, target, cards: [baseCard, ...multiCards], result });
         const type = data.type;
         if (type === "attack") {
             if (data.rate < 1) {
@@ -174,7 +187,7 @@ export class GF_Game {
             player.hp = data.hp;
             player.mp = data.mp;
             player.gold = data.gold;
-            this.#events.onExchange?.({ player, action: data });
+            super.emit("onExchange", { player, action: data });
         }
         else if (type === "heal") {
             switch (data.healType) {
@@ -188,7 +201,7 @@ export class GF_Game {
                     target.gold += data.value;
                     break;
             }
-            this.#events.onHeal?.({ player: target, action: data });
+            super.emit("onHeal", { player: target, action: data });
         }
         else if (type === "sell") { //!!! 未実装
         }
@@ -204,40 +217,15 @@ export class GF_Game {
         //手持ちのカードを使用
         const result = player.deck.useCard(data);
         //防御カード使用イベント発火
-        this.#events.onUseCard?.({ type: "defensive", player, cards: base ? [base, ...multiCards] : multiCards, result });
+        super.emit("onUseCard", { type: "defensive", player, cards: base ? [base, ...multiCards] : multiCards, result });
         const damage = this.currentAction.value - data.value;
         //防御イベント発火
-        this.#events.onDefense?.({
+        super.emit("onDefense", {
             player,
             damageSource: this.currentAction.src,
         });
-        if (damage > 0) {
-            this.currentAction.target.hp -= damage;
-            const nextAction = {
-                ghost: true,
-                trap: true
-            };
-            const res = {
-                player: this.currentAction.target,
-                damageSource: this.currentAction.src,
-                damage,
-                nextAction
-            };
-            //ダメージイベント発火
-            this.#events.onDamage?.(res);
-            //ゴーストの祓い抽選と行動処理
-            if (nextAction.ghost)
-                this.#ghostExorcism(this.currentAction.target);
-            //プレイヤーが死亡
-            if (!player.isAlive) {
-                this.#events.onDeath?.({ player });
-                if (nextAction.trap)
-                    this.#trapAction(this.currentAction.target, this.currentAction.src);
-            }
-            //ゴーストの行動処理
-            if (player.isAlive)
-                this.#ghostAction(player, this.currentAction.src);
-        }
+        if (damage > 0)
+            this.addDamage(player, damage, this.currentAction.src);
         //防御フェーズ終了
         this.#currentAction = undefined;
     }
@@ -248,7 +236,7 @@ export class GF_Game {
     #ghostExorcism(player) {
         if (player.ghost && Math.random() < 0.05) {
             player.ghost = GF_Element.Empty;
-            this.#events.onRemoveGhost?.({ player });
+            super.emit("onRemoveGhost", { player });
         }
     }
     /**
@@ -275,34 +263,72 @@ export class GF_Game {
         while (this.#systemActionQueue.length > 0) {
             if (!this.currentAction)
                 break;
+            //防御側が死亡している場合は次のアクションへ
+            if (!this.currentAction.target.isAlive) {
+                this.#currentAction = undefined;
+                continue;
+            }
             //攻撃イベント発火
-            this.#events.onAttack?.({ action: this.currentAction });
+            super.emit("onAttack", { action: this.currentAction });
             if (this.currentAction.isMiss) {
                 continue;
             }
             else if (this.currentAction.src === this.currentAction.target) {
-                this.#events.onDamage?.({
-                    player: this.currentAction.target,
-                    damageSource: this.currentAction.src,
-                    damage: this.currentAction.value,
-                    nextAction: {
-                        ghost: false,
-                        trap: false
-                    }
-                });
+                this.addDamage(this.currentAction.target, this.currentAction.value, this.currentAction.src);
+                this.#currentAction = undefined;
                 continue;
             }
         }
         //ゲーム終了判定
+        const isGameEnd = this.#checkGameEnd();
+        if (!isGameEnd) {
+            this.emit("onNextTurn", {
+                player: this.currentPlayer
+            });
+        }
+    }
+    kill(player) {
+        this.addDamage(player, player.hp, player);
+    }
+    addDamage(player, damage, damageSource) {
+        player.hp -= damage;
+        const nextAction = {
+            ghost: true,
+            trap: true
+        };
+        //ダメージイベント発火
+        super.emit("onDamage", {
+            player,
+            damageSource,
+            damage,
+            nextAction
+        });
+        //ゴーストの祓い抽選と行動処理
+        if (nextAction.ghost)
+            this.#ghostExorcism(player);
+        //プレイヤーが死亡
+        if (!player.isAlive) {
+            super.emit("onDeath", { player });
+            if (nextAction.trap)
+                this.#trapAction(player, damageSource);
+        }
+        //ゴーストの行動処理
+        if (player.isAlive)
+            this.#ghostAction(player, damageSource);
+        //ゲーム終了判定
+        this.#nextTick();
+    }
+    #checkGameEnd() {
         const alivePlayers = this.#players.filter(p => p.isAlive);
-        const gameEnd = alivePlayers.length <= 1;
-        if (gameEnd) {
-            this.#winner = alivePlayers[0];
+        if (alivePlayers.length <= 1) {
             this.#systemActionQueue = [];
             this.#currentAction = undefined;
-            this.#events.onGameEnd?.({ winner: this.#winner });
-            return;
+            this.#winner = alivePlayers[0];
+            this.#isPlaying = false;
+            super.emit("onGameEnd", { winner: this.#winner });
+            return true;
         }
+        return false;
     }
     get info() {
         return {

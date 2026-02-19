@@ -157,3 +157,18 @@ export function useDefensive(src, baseCard, options) {
     }
     throw new GF_CardError_ComponentConflict("不明な防御コンポーネントです");
 }
+export function cardArray_to_cardMap(cards) {
+    return cards.reduce((map, card) => {
+        const count = map.get(card) ?? 0;
+        map.set(card, count + 1);
+        return map;
+    }, new Map());
+}
+export function cardArray_to_cardIDMap(cards) {
+    return cards.reduce((map, card) => {
+        const cardID = typeof card === "string" ? card : card.id;
+        const count = map.get(cardID) ?? 0;
+        map.set(cardID, count + 1);
+        return map;
+    }, new Map());
+}

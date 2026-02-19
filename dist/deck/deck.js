@@ -45,6 +45,64 @@ export class GF_Deck {
     drawCard() {
         return this.#draw();
     }
+    checkValidCard(card) {
+        if (card instanceof GF_Card) {
+            return this.#cards.has(card.id);
+        }
+        return this.#cards.has(card);
+    }
+    getValidCard(card) {
+        if (card instanceof GF_Card) {
+            return this.#cards.get(card.id);
+        }
+        return this.#cards.get(card);
+    }
+    getCardMapByCardIDMap(cardIDMap) {
+        const cardMap = new Map();
+        Object.entries(cardIDMap).forEach(([cardID, count]) => {
+            const card = this.#cards.get(cardID);
+            if (!card)
+                return;
+            cardMap.set(card, count);
+        });
+        return cardMap;
+    }
+}
+class GF_Card_Manager {
+    #cards = new Map();
+    #deck;
+    constructor(deck) {
+        this.#deck = deck;
+    }
+    getCardCount(card) {
+        const cardObj = this.#deck.getValidCard(card);
+        if (!cardObj)
+            return 0;
+        return this.#cards.get(cardObj) ?? 0;
+    }
+    setCardCount(card, count) {
+        const cardObj = this.#deck.getValidCard(card);
+        if (!cardObj)
+            return;
+        this.#cards.set(cardObj, count);
+    }
+    get totalCount() {
+        return this.#cards.values().reduce((a, b) => a + b, 0);
+    }
+    get cards() {
+        const entries = this.#cards.entries().map(([card, count]) => [card.id, count]);
+        return Object.fromEntries(entries);
+    }
+    canUseCards(cards) {
+        for (const [card, count] of cards) {
+            const haveCount = this.getCardCount(card);
+            if (haveCount < count)
+                return false;
+        }
+        return true;
+    }
+    removeCards(cards) {
+    }
 }
 /**
  * プレイヤーのデッキ
@@ -62,11 +120,14 @@ export class GF_PlayerDeck {
     /**最大魔法スタック枚数 */
     #maxMagicStackSize;
     #src;
-    constructor(src, deck, maxHandSize = 5, maxMagicStackSize = 5) {
+    constructor(src, deck, maxHandSize = 10, maxMagicStackSize = 3) {
         this.#src = src;
         this.#deck = deck;
         this.#maxHandSize = maxHandSize;
         this.#maxMagicStackSize = maxMagicStackSize;
+    }
+    get masterDeck() {
+        return this.#deck;
     }
     get totalHandCount() {
         return this.#hand.values().reduce((a, b) => a + b, 0);
@@ -232,5 +293,69 @@ export class GF_PlayerDeck {
             const cards = this.#hand.keys().toArray();
             return cards[Math.floor(Math.random() * this.#hand.size)];
         }
+    }
+    addHandCard(card, count = 1) {
+        const cardObj = this.#deck.getValidCard(card);
+        if (!cardObj)
+            return;
+        const haveCount = this.getCardCount(cardObj);
+        this.setCard(cardObj, haveCount + count);
+    }
+    removeHandCard(card, count = 1) {
+        const cardObj = this.#deck.getValidCard(card);
+        if (!cardObj)
+            return;
+        const haveCount = this.getCardCount(cardObj);
+        this.setCard(cardObj, Math.max(haveCount - count, 0));
+    }
+    addMagicStackCard(card, count = 1) {
+        const cardObj = this.#deck.getValidCard(card);
+        if (!cardObj)
+            return;
+        const haveCount = this.getMagicStackCount(cardObj);
+        this.setMagicStack(cardObj, haveCount + count);
+    }
+    clearHand() {
+        this.#hand.clear();
+    }
+    clearMagicStack() {
+        this.#magicStack.clear();
+    }
+    clearAll() {
+        this.clearHand();
+        this.clearMagicStack();
+    }
+    setHandCards(cards) {
+        Object.entries(cards).forEach(([cardID, count]) => {
+            const card = this.#deck.getValidCard(cardID);
+            if (!card)
+                return;
+            this.setCard(card, count);
+        });
+    }
+    setMagicStackCards(cards) {
+        Object.entries(cards).forEach(([cardID, count]) => {
+            const card = this.#deck.getValidCard(cardID);
+            if (!card)
+                return;
+            this.setMagicStack(card, count);
+        });
+    }
+    canUseCards(data) {
+        //使用するカードの枚数を集計
+        const cardMap = data.cards.reduce((map, card) => {
+            const count = map.get(card) ?? 0;
+            map.set(card, count + 1);
+            return map;
+        }, new Map());
+        //MPが足りているか確認
+        if (this.#src.mp < data.cost)
+            return false;
+        //魔法カードが既に魔法スタックに存在するか確認
+        if (data.isMagic && this.hasMagicCards(cardMap))
+            return true;
+        //手札に指定枚数あるか確認
+        const hasCards = this.hasCards(cardMap);
+        return hasCards;
     }
 }

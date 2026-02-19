@@ -1,4 +1,4 @@
-export const VERSION = "0.1.1";
+export const VERSION = "0.1.5";
 export function VERSION_COMPARISON(v1, operations, v2) {
     const parseVersion = (v) => v.split('.').map(num => parseInt(num, 10));
     const [major1, minor1, patch1] = parseVersion(v1);
