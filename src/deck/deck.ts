@@ -6,12 +6,13 @@ import { GF_Error_Undefined } from "../game/error.js";
 import type { GF_Player } from "../player/player.js";
 import { generateTable } from "../table/table.js";
 import { GF_CardMixData_All } from "../util/card/index.js";
+import { GF_Util } from "../util/index.js";
 
 
 type DrawCallback<EX_Card extends GF_EX_GameData> = () => GF_Card<EX_Card>;
 
 
-export class GF_Deck<EX_Card extends GF_EX_GameData = {}> {
+export class GF_Deck<EX_Card extends GF_EX_GameData> {
 
     #cards: Map<GF_Card_ID, GF_Card<EX_Card>>;
     #draw: DrawCallback<EX_Card>;
@@ -74,6 +75,80 @@ export class GF_Deck<EX_Card extends GF_EX_GameData = {}> {
     drawCard(): GF_Card<EX_Card> {
         return this.#draw();
     }
+
+    checkValidCard(card: GF_Card_ID | GF_Card<EX_Card>): boolean {
+        if (card instanceof GF_Card) {
+            return this.#cards.has(card.id);
+        }
+        return this.#cards.has(card);
+    }
+
+
+    getValidCard(card: GF_Card_ID | GF_Card<EX_Card>): GF_Card<EX_Card> | undefined {
+        if (card instanceof GF_Card) {
+            return this.#cards.get(card.id);
+        }
+        return this.#cards.get(card);
+    }
+
+    getCardMapByCardIDMap(cardIDMap: Record<GF_Card_ID, number>): Map<GF_Card<EX_Card>, number> {
+        const cardMap = new Map<GF_Card<EX_Card>, number>();
+        Object.entries(cardIDMap).forEach(([cardID, count]) => {
+            const card = this.#cards.get(cardID as GF_Card_ID);
+            if (!card) return;
+            cardMap.set(card, count);
+        });
+        return cardMap;
+    }
+}
+
+
+
+
+
+
+
+
+class GF_Card_Manager<EX_Card extends GF_EX_GameData> {
+    #cards: Map<GF_Card<EX_Card>, number> = new Map();
+
+    #deck: GF_Deck<EX_Card>;
+    constructor(deck: GF_Deck<EX_Card>) {
+        this.#deck = deck;
+    }
+    
+    getCardCount(card: GF_Card_ID | GF_Card<EX_Card>): number {
+        const cardObj = this.#deck.getValidCard(card);
+        if (!cardObj) return 0;
+        return this.#cards.get(cardObj) ?? 0;
+    }
+
+    setCardCount(card: GF_Card_ID | GF_Card<EX_Card>, count: number) {
+        const cardObj = this.#deck.getValidCard(card);
+        if (!cardObj) return;
+        this.#cards.set(cardObj, count);
+    }
+
+    get totalCount(): number {
+        return this.#cards.values().reduce((a, b) => a + b, 0);
+    }
+
+    get cards(): Record<GF_Card_ID, number> {
+        const entries = this.#cards.entries().map(([card, count]) => [card.id, count]);
+        return Object.fromEntries(entries);
+    }
+    
+    canUseCards(cards: Map<GF_Card<EX_Card>, number>): boolean {
+        for (const [card, count] of cards) {
+            const haveCount = this.getCardCount(card);
+            if (haveCount < count) return false;
+        }
+        return true;
+    }
+
+    removeCards(cards: Record<GF_Card_ID, number>) {
+
+    }
 }
 
 
@@ -88,16 +163,7 @@ export class GF_Deck<EX_Card extends GF_EX_GameData = {}> {
 
 
 
-
-
-
-
-
-
-
-
-
-
+export type GF_DeckMap<EX_Card extends GF_EX_GameData> = Map<GF_Card<EX_Card>, number>;
 
 
 
@@ -120,11 +186,15 @@ export class GF_PlayerDeck<EX_Card extends GF_EX_GameData = {}> {
     #maxMagicStackSize: number;
 
     #src: GF_Player<EX_Card>;
-    constructor(src: GF_Player<EX_Card>, deck: GF_Deck<EX_Card>, maxHandSize: number = 5, maxMagicStackSize: number = 5) {
+    constructor(src: GF_Player<EX_Card>, deck: GF_Deck<EX_Card>, maxHandSize: number = 10, maxMagicStackSize: number = 3) {
         this.#src = src;
         this.#deck = deck;
         this.#maxHandSize = maxHandSize;
         this.#maxMagicStackSize = maxMagicStackSize;
+    }
+
+    get masterDeck() {
+        return this.#deck;
     }
 
 
@@ -328,6 +398,80 @@ export class GF_PlayerDeck<EX_Card extends GF_EX_GameData = {}> {
     }
 
 
+    addHandCard(card: GF_Card<EX_Card> | GF_Card_ID, count: number = 1) {
+        const cardObj = this.#deck.getValidCard(card);
+        if (!cardObj) return;
+        const haveCount = this.getCardCount(cardObj);
+        this.setCard(cardObj, haveCount + count);
+    }
+
+    removeHandCard(card: GF_Card<EX_Card> | GF_Card_ID, count: number = 1) {
+        const cardObj = this.#deck.getValidCard(card);
+        if (!cardObj) return;
+        const haveCount = this.getCardCount(cardObj);
+        this.setCard(cardObj, Math.max(haveCount - count, 0));
+    }
+    
+    addMagicStackCard(card: GF_Card<EX_Card> | GF_Card_ID, count: number = 1) {
+        const cardObj = this.#deck.getValidCard(card);
+        if (!cardObj) return;
+        const haveCount = this.getMagicStackCount(cardObj);
+        this.setMagicStack(cardObj, haveCount + count);
+    }
+    
+    
+    clearHand() {
+        this.#hand.clear();
+    }
+
+    clearMagicStack() {
+        this.#magicStack.clear();
+    }
+
+    clearAll() {
+        this.clearHand();
+        this.clearMagicStack();
+    }
+    
+    setHandCards(cards: Record<GF_Card_ID, number> | Map<GF_Card<EX_Card>, number>) {
+        Object.entries(cards).forEach(([cardID, count]) => {
+            const card = this.#deck.getValidCard(cardID as GF_Card_ID);
+            if (!card) return;
+            this.setCard(card, count);
+        });
+    }
+
+    setMagicStackCards(cards: Record<GF_Card_ID, number> | Map<GF_Card<EX_Card>, number>) {
+        Object.entries(cards).forEach(([cardID, count]) => {
+            const card = this.#deck.getValidCard(cardID as GF_Card_ID);
+            if (!card) return;
+            this.setMagicStack(card, count);
+        });
+    }
+
+
+    canUseCards(data: GF_CardMixData_All<EX_Card>): boolean {
+        //使用するカードの枚数を集計
+        const cardMap = data.cards.reduce<Map<GF_Card<EX_Card>, number>>((map, card) => {
+            const count = map.get(card) ?? 0;
+            map.set(card, count + 1);
+            return map;
+        }, new Map());
+
+        //MPが足りているか確認
+        if (this.#src.mp < data.cost) return false;
+
+        //魔法カードが既に魔法スタックに存在するか確認
+        if (data.isMagic && this.hasMagicCards(cardMap)) return true;
+
+
+        //手札に指定枚数あるか確認
+        const hasCards = this.hasCards(cardMap);
+
+        return hasCards;
+        
+    }
+    
 }
 
 
