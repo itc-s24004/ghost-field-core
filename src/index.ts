@@ -7,6 +7,3 @@ export * from "./game/index.js";
 export * from "./player/index.js";
 export * from "./table/index.js";
 export * from "./util/index.js";
-
-
-export const VERSION = "0.1.1";
