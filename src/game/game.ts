@@ -2,6 +2,7 @@ import { GF_Card } from "../card/card.js";
 import type { GF_Card_ID, GF_CardComponent } from "../card/component.js";
 import { GF_Element } from "../card/element.js";
 import { GF_Deck } from "../deck/deck.js";
+import { CategoryEventEmitter } from "../emitter/emitter.js";
 import { GF_Player } from "../player/player.js";
 import { GF_CardUseOptions } from "../util/card/index.js";
 import { GF_Util } from "../util/index.js";
@@ -13,7 +14,7 @@ import type { GF_GameEventMap, GF_SystemEventDataMap } from "./events/index.js";
 
 
 
-export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_GameData = {}> {
+export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_GameData = {}, Category extends string = string> extends CategoryEventEmitter<GF_SystemEventDataMap<EX_Card>, Category> {
     #systemActionQueue: Readonly<GF_SystemAction<EX_Card>>[] = [];
 
     /**現在の攻撃アクション */
@@ -29,6 +30,10 @@ export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_
 
     
     #players: GF_Player<EX_Card>[] = [];
+    
+    get allPlayers() {
+        return this.#isPlaying ? this.#players : [];
+    }
     
     /**現在攻撃中のプレイヤー */
     #currentPlayer: GF_Player<EX_Card> | undefined = undefined;
@@ -64,6 +69,11 @@ export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_
         return this.#players.indexOf(player);
     }
 
+    #isPlaying = false;
+    get isPlaying() {
+        return this.#isPlaying;
+    }
+    
     #winner: GF_Player<EX_Card> | undefined = undefined;
     get winner() {
         return this.#winner;
@@ -73,14 +83,22 @@ export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_
     #deck: GF_Deck<EX_Card>;
     
     #meta: EX_Meta | undefined = undefined;
+
+
+    get initData(): GF_Initial_Game<EX_Card, EX_Meta> {
+        return {
+            cards: this.#deck.allCards.map(c => c.component),
+            meta: this.#meta
+        };
+    }
     
-    #events: GF_GameEventMap<EX_Card>;
     constructor(initialData: GF_Initial_Game<EX_Card, EX_Meta>, options: GF_GameOptions<EX_Card> = {}) {
+        super();
+        
         const {
             secureMode = false,
             events = {}
         } = options;
-        this.#events = events;
 
         this.#deck = new GF_Deck<EX_Card>(initialData.cards);
         this.#meta = initialData.meta;
@@ -89,17 +107,20 @@ export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_
 
     reset(playerCount: number) {
         this.#players = new Array(playerCount).fill(null).map(() => new GF_Player<EX_Card>(this.#deck));
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 5; i++) {
             this.#players.forEach( player => {
-                const result = player.deck.drawCard();
-                this.#events.onDrawCard?.({
+                const { drawnCard, removedCard } = player.deck.drawCard();
+                this.emit("onDrawCard", {
                     player,
-                    ...result
+                    drawnCard,
+                    removedCard
                 });
                 
             });
         }
+        this.#winner = undefined;
         this.#currentPlayer = this.#players[0];
+        this.#isPlaying = true;
     }
 
 
@@ -110,7 +131,7 @@ export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_
 
 
     next(useCards: (GF_Card<EX_Card> | GF_Card_ID)[], targetIndex: number, options?: GF_CardUseOptions) {
-        if (this.winner) throw new GF_Error_Undefined("ゲームが終了しています。");
+        if (!this.isPlaying) throw new GF_Error_Undefined("ゲームが終了しています。");
 
         const target = this.#players[targetIndex];
         if (!target) throw new GF_Error_Undefined("指定されたターゲットプレイヤーが存在しません。");
@@ -136,13 +157,10 @@ export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_
         }
 
         //プレイヤーが死亡
-        if (!player.isAlive) {
-            this.#events.onDeath?.({ player});
-
-        } else {
+        if (player.isAlive) {
             for (let i = 0; i < cards.length; i++) {
                 const result = player.deck.drawCard();
-                this.#events.onDrawCard?.({
+                super.emit("onDrawCard", {
                     player,
                     ...result
                 });
@@ -170,7 +188,7 @@ export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_
         if (!baseCard) {
             if (!player.deck.hasCanUseCard()) {
                 const result = player.deck.drawCard();
-                this.#events.onDrawCard?.({
+                super.emit("onDrawCard", {
                     player,
                     ...result
                 });
@@ -187,7 +205,7 @@ export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_
             ...options
         });
         const result = player.deck.useCard(data);
-        this.#events.onUseCard?.({ type: "offensive", player, target, cards: [baseCard, ...multiCards], result });
+        super.emit("onUseCard", { type: "offensive", player, target, cards: [baseCard, ...multiCards], result });
         const type = data.type;
 
         if (type === "attack") {
@@ -217,7 +235,7 @@ export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_
             player.hp = data.hp;
             player.mp = data.mp;
             player.gold = data.gold;
-            this.#events.onExchange?.({ player, action: data });
+            super.emit("onExchange", { player, action: data });
 
         } else if (type === "heal") {
             switch (data.healType) {
@@ -231,7 +249,7 @@ export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_
                     target.gold += data.value;
                     break;
             }
-            this.#events.onHeal?.({ player: target, action: data });
+            super.emit("onHeal", { player: target, action: data });
 
         } else if (type === "sell") {//!!! 未実装
 
@@ -251,47 +269,19 @@ export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_
         const result = player.deck.useCard(data);
 
         //防御カード使用イベント発火
-        this.#events.onUseCard?.({ type: "defensive", player, cards: base ? [base, ...multiCards] : multiCards, result });
+        super.emit("onUseCard", { type: "defensive", player, cards: base ? [base, ...multiCards] : multiCards, result });
 
         const damage = this.currentAction.value - data.value;
 
         //防御イベント発火
-        this.#events.onDefense?.({
+        super.emit("onDefense", {
             player,
             damageSource: this.currentAction.src,
         });
 
 
-        if (damage > 0) {
-            this.currentAction.target.hp -= damage;
-            const nextAction: GF_SystemEventDataMap<EX_Card>["onDamage"]["nextAction"] = {
-                ghost: true,
-                trap: true
-            };
-            
-            const res: GF_SystemEventDataMap<EX_Card>["onDamage"] = {
-                player: this.currentAction.target,
-                damageSource: this.currentAction.src,
-                damage,
-                nextAction
-            };
-            //ダメージイベント発火
-            this.#events.onDamage?.(res);
+        if (damage > 0) this.addDamage(player, damage, this.currentAction.src);
 
-            //ゴーストの祓い抽選と行動処理
-            if (nextAction.ghost) this.#ghostExorcism(this.currentAction.target);
-
-            //プレイヤーが死亡
-            if (!player.isAlive) {
-                this.#events.onDeath?.({ player });
-                if (nextAction.trap) this.#trapAction(this.currentAction.target, this.currentAction.src);
-            }
-
-            //ゴーストの行動処理
-            if (player.isAlive) this.#ghostAction(player, this.currentAction.src);
-
-        }
-        
         //防御フェーズ終了
         this.#currentAction = undefined;
 
@@ -306,7 +296,7 @@ export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_
     #ghostExorcism(player: GF_Player<EX_Card>) {
         if (player.ghost && Math.random() < 0.05) {
             player.ghost = GF_Element.Empty;
-            this.#events.onRemoveGhost?.({ player });
+            super.emit("onRemoveGhost", { player });
         }
     }
 
@@ -340,38 +330,84 @@ export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_
         while (this.#systemActionQueue.length > 0) {
             if (!this.currentAction) break;
 
+            //防御側が死亡している場合は次のアクションへ
+            if (!this.currentAction.target.isAlive) {
+                this.#currentAction = undefined;
+                continue;
+            }
+            
             //攻撃イベント発火
-            this.#events.onAttack?.({ action: this.currentAction });
+            super.emit("onAttack", { action: this.currentAction });
             
             if (this.currentAction.isMiss) {
                 continue;
 
             } else if (this.currentAction.src === this.currentAction.target) {
-                this.#events.onDamage?.({
-                    player: this.currentAction.target,
-                    damageSource: this.currentAction.src,
-                    damage: this.currentAction.value,
-                    nextAction: {
-                        ghost: false,
-                        trap: false
-                    }
-                });
+                this.addDamage(this.currentAction.target, this.currentAction.value, this.currentAction.src);
+                this.#currentAction = undefined;
                 continue;
 
             }
         }
         
         //ゲーム終了判定
-        const alivePlayers = this.#players.filter(p => p.isAlive);
-        const gameEnd = alivePlayers.length <= 1;
+        const isGameEnd = this.#checkGameEnd();
+        if (!isGameEnd) {
+            this.emit("onNextTurn", {
+                player: this.currentPlayer!
+            })
+        }
+    }
 
-        if (gameEnd) {
-            this.#winner = alivePlayers[0];
+
+
+    kill(player: GF_Player<EX_Card>) {
+        this.addDamage(player, player.hp, player);
+    }
+    
+    
+    addDamage(player: GF_Player<EX_Card>, damage: number, damageSource: GF_Player<EX_Card>) {
+        player.hp -= damage;
+
+        const nextAction: GF_SystemEventDataMap<EX_Card>["onDamage"]["nextAction"] = {
+            ghost: true,
+            trap: true
+        };
+        //ダメージイベント発火
+        super.emit("onDamage", {
+            player,
+            damageSource,
+            damage,
+            nextAction
+        });
+
+        //ゴーストの祓い抽選と行動処理
+        if (nextAction.ghost) this.#ghostExorcism(player);
+
+        //プレイヤーが死亡
+        if (!player.isAlive) {
+            super.emit("onDeath", { player });
+            if (nextAction.trap) this.#trapAction(player, damageSource);
+        }
+
+        //ゴーストの行動処理
+        if (player.isAlive) this.#ghostAction(player, damageSource);
+
+        //ゲーム終了判定
+        this.#nextTick();
+    }
+
+    #checkGameEnd(): boolean {
+        const alivePlayers = this.#players.filter(p => p.isAlive);
+        if (alivePlayers.length <= 1) {
             this.#systemActionQueue = [];
             this.#currentAction = undefined;
-            this.#events.onGameEnd?.({ winner: this.#winner });
-            return;
+            this.#winner = alivePlayers[0];
+            this.#isPlaying = false;
+            super.emit("onGameEnd", { winner: this.#winner });
+            return true;
         }
+        return false;
     }
 
 
