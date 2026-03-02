@@ -271,12 +271,16 @@ export class GF_Game extends CategoryEventEmitter {
             //攻撃イベント発火
             super.emit("onAttack", { action: this.currentAction });
             if (this.currentAction.isMiss) {
+                this.#currentAction = undefined;
                 continue;
             }
             else if (this.currentAction.src === this.currentAction.target) {
                 this.addDamage(this.currentAction.target, this.currentAction.value, this.currentAction.src);
                 this.#currentAction = undefined;
                 continue;
+            }
+            else {
+                break;
             }
         }
         //ゲーム終了判定

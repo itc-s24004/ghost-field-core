@@ -340,6 +340,7 @@ export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_
             super.emit("onAttack", { action: this.currentAction });
             
             if (this.currentAction.isMiss) {
+                this.#currentAction = undefined;
                 continue;
 
             } else if (this.currentAction.src === this.currentAction.target) {
@@ -347,6 +348,8 @@ export class GF_Game<EX_Card extends GF_EX_GameData = {}, EX_Meta extends GF_EX_
                 this.#currentAction = undefined;
                 continue;
 
+            } else {
+                break;
             }
         }
         
